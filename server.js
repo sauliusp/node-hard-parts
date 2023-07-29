@@ -2,6 +2,9 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
+const logFile = path.join(__dirname, 'hi_log.txt');
+const styleFile = path.join(__dirname, 'style.css');
+
 function doOnRequest(request, response){
   // Send back a message saying "Welcome to Twitter"
   // code here...
@@ -15,10 +18,13 @@ function doOnRequest(request, response){
     // fs.createReadStream(path.join(__dirname, 'index.html')).pipe(response);
 
   }
+  else if (request.method === 'GET' && request.url === '/style.css') {
+    response.end(fs.readFileSync(styleFile));
+  }
   else if (request.method === 'POST' && request.url === '/sayHi') {
     // code here...
 
-    fs.appendFileSync(path.join(__dirname, 'hi_log.txt'), 'Somebody said hi.\n');
+    fs.appendFileSync(logFile, 'Somebody said hi.\n');
     response.end("hi back to you!")  
   }
   else if (request.method === 'POST' && request.url === '/greeting') {
@@ -27,7 +33,13 @@ function doOnRequest(request, response){
 
     let body = '';
 
-    request.on('data', (chunk) => { body += String(chunk); });
+    request.on('data', (chunk) => { 
+      const payload = String(chunk);
+
+      body += payload; 
+
+      fs.appendFileSync(logFile, payload + '\n');
+    });
 
     // when the request has finished being sent, send back a modified message
 
@@ -47,6 +59,8 @@ function doOnRequest(request, response){
   else {
     // Handle 404 error: page not found
     // code here...
+    response.statusCode = 404;
+    response.end("Error: page not found")
     
   }
 }
