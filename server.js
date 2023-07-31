@@ -4,6 +4,7 @@ const path = require('path');
 
 const logFile = path.join(__dirname, 'hi_log.txt');
 const styleFile = path.join(__dirname, 'style.css');
+const largeFile = path.join(__dirname, 'large.txt');
 
 function doOnRequest(request, response){
   // Send back a message saying "Welcome to Twitter"
@@ -17,6 +18,32 @@ function doOnRequest(request, response){
 
     // fs.createReadStream(path.join(__dirname, 'index.html')).pipe(response);
 
+  }
+  else if (request.method === 'GET' && request.url === '/largeTxtFast') {
+    
+    const readStream = fs.createReadStream(largeFile);
+
+    response.writeHead(200, { 'Content-Type': 'text/plain' });
+
+    // readStream.on('data', (chunk) => {
+    //   console.log(String(chunk))
+
+    //   response.write(String(chunk));
+    // });
+
+    // readStream.on('end', () => {
+    //   response.end();
+    // })
+
+    readStream.pipe(response);
+  }
+  else if (request.method === 'GET' && request.url === '/largeTxtSlow') {
+    
+    const readStream = fs.createReadStream(largeFile);
+
+    response.writeHead(200, { 'Content-Type': 'text/plain' });
+
+    response.end(fs.readFileSync(largeFile)); 
   }
   else if (request.method === 'GET' && request.url === '/style.css') {
     response.end(fs.readFileSync(styleFile));
@@ -66,5 +93,9 @@ function doOnRequest(request, response){
 }
 
 const server = http.createServer(doOnRequest)
+
+server.on('clientError', (err, socket) => {
+  console.error(err);
+});
 
 server.listen(3000);
